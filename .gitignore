@@ -1,0 +1,3 @@
+test-downloads/
+.mypy_cache/
+data/
