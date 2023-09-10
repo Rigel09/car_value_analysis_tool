@@ -12,12 +12,12 @@ from typing import Any, Dict
 URL_FILE = TOP_LEVEL_PROJECT_DIR.joinpath("configs/url_config.txt")
 DATA_FOLDER = TOP_LEVEL_PROJECT_DIR.joinpath("data")
 LOG_FOLDER = TOP_LEVEL_PROJECT_DIR.joinpath("logs")
-DESC = "Scrapes used car pricing data from the web"
+DESC = "Scrapes used car pricing data from the web\nVersion: {VERSION}"
 PROG = "Car Value Analysis Tool"
 
 logger = logging.getLogger(__name__)
 logging.basicConfig()
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 if __name__ == "__main__":
@@ -30,7 +30,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     test_mode: bool = args.mode
 
-    logger.info(f"{PROG} is starting up")
+    logger.info(f"{PROG} Version: {VERSION} is starting up")
 
     if test_mode:
         logger.info("Test mode is enabled")
@@ -46,6 +46,8 @@ if __name__ == "__main__":
     if not URL_FILE.exists():
         raise FileExistsError(f"Error: {URL_FILE} doesn't exist")
 
+    logger.debug(f"Config file used is [{URL_FILE}]")
+
     with URL_FILE.open("r") as config_file:
         for config in config_file:
             if not config:
@@ -53,7 +55,8 @@ if __name__ == "__main__":
 
             make, model, year, url = config.strip().split(";")
 
-            print(f"URL:\n\t[{url}]")
+            logger.debug(f"Make: {make}  model: {model}  year: {year}")
+            logger.debug(f"URL:\n\t[{url}]")
 
             webpage = requests.get(url)
 
@@ -62,27 +65,26 @@ if __name__ == "__main__":
             index_back = contents.find('PriceRange"}') + len('PriceRange"}')
 
             raw_car_value_data = contents[index_front:index_back]
+            logger.debug(f"Raw contents: {raw_car_value_data}")
             car_value_dict: Dict[str, Any] = json.loads(raw_car_value_data)
-
-            print("This is the data I got:")
-            print(f"\tRangelow: {car_value_dict['rangeLow']}")
-            print(f"\tRangeHigh: {car_value_dict['rangeHigh']}")
-            print(f"\tValue: {car_value_dict['configuredValue']}")
-            print(f"\tBaseValue: {car_value_dict['baseValue']}")
-            print(f"\tPriceType: {car_value_dict['priceType']}")
 
             data_file_name = f"{make}_{model}_{year}_values.csv"
 
             if test_mode:
                 data_file_name = f"{make}_{model}_{year}_values_testing.csv"
 
-            with DATA_FOLDER.joinpath(data_file_name).open("a+") as data_file:
+            data_file = DATA_FOLDER.joinpath(data_file_name)
+
+            logger.info(f"Putting site contents in {data_file}")
+
+            with data_file.open("a+") as data_file:
                 rlow = car_value_dict["rangeLow"]
                 rhigh = car_value_dict["rangeHigh"]
                 value = car_value_dict["configuredValue"]
                 base_value = car_value_dict["baseValue"]
                 pricing_type = car_value_dict["priceType"]
                 date = dtime.datetime.now().strftime("%d-%m-%Y")
-                data_file.write(
-                    f"{date},{rlow},{rhigh},{value},{base_value},{pricing_type}\n"
-                )
+
+                line = f"{date},{rlow},{rhigh},{value},{base_value},{pricing_type}\n"
+                data_file.write(line)
+                logger.debug(f"Wrote line [{line}]")
