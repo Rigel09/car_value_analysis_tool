@@ -64,7 +64,7 @@ if __name__ == "__main__":
             if test_mode:
                 data_file_name = f"{make}_{model}_{year}_values_testing.csv"
 
-            with DATA_FOLDER.joinpath(data_file_name).open("a") as data_file:
+            with DATA_FOLDER.joinpath(data_file_name).open("a+") as data_file:
                 rlow = car_value_dict["rangeLow"]
                 rhigh = car_value_dict["rangeHigh"]
                 value = car_value_dict["configuredValue"]
