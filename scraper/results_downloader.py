@@ -11,6 +11,7 @@ from typing import Any, Dict
 
 URL_FILE = TOP_LEVEL_PROJECT_DIR.joinpath("configs/url_config.txt")
 DATA_FOLDER = TOP_LEVEL_PROJECT_DIR.joinpath("data")
+LOG_FOLDER = TOP_LEVEL_PROJECT_DIR.joinpath("logs")
 DESC = "Scrapes used car pricing data from the web"
 PROG = "Car Value Analysis Tool"
 
@@ -25,12 +26,21 @@ if __name__ == "__main__":
         help="Puts program in test mode. Used for debugging",
     )
     args = parser.parse_args()
-
     test_mode: bool = args.mode
 
-    logger.info(f"This script will go and download data for all urls in {URL_FILE}")
+    logger.info(f"{PROG} is starting up")
 
-    print("Opening file")
+    if test_mode:
+        logger.info("Test mode is enabled")
+
+    if not DATA_FOLDER.exists():
+        logger.info(f"Creating data folder [{DATA_FOLDER}]")
+        DATA_FOLDER.mkdir(parents=True)
+
+    if not LOG_FOLDER.exists():
+        logger.info(f"Creating log folder [{LOG_FOLDER}]")
+        LOG_FOLDER.mkdir(parents=True)
+
     if not URL_FILE.exists():
         raise FileExistsError(f"Error: {URL_FILE} doesn't exist")
 
