@@ -1,15 +1,34 @@
-from typing import Any, Dict
-import requests
-from pathlib import Path
-import json
-import datetime as dtime
+# Local Imports
+#########################
+from project_specs import VERSION, TOP_LEVEL_PROJECT_DIR
 
-URL_FILE = Path("configs/url_config.txt")
-DATA_FOLDER = Path("data")
+import argparse
+import datetime as dtime
+import json
+import logging
+import requests
+from typing import Any, Dict
+
+URL_FILE = TOP_LEVEL_PROJECT_DIR.joinpath("configs/url_config.txt")
+DATA_FOLDER = TOP_LEVEL_PROJECT_DIR.joinpath("data")
+DESC = "Scrapes used car pricing data from the web"
+PROG = "Car Value Analysis Tool"
+
+logger = logging.getLogger(__name__)
 
 
 if __name__ == "__main__":
-    print(f"This script will go and download data for all urls in {URL_FILE}")
+    parser = argparse.ArgumentParser(prog=PROG, description=DESC)
+    parser.add_argument(
+        "--mode",
+        action="store_true",
+        help="Puts program in test mode. Used for debugging",
+    )
+    args = parser.parse_args()
+
+    test_mode: bool = args.mode
+
+    logger.info(f"This script will go and download data for all urls in {URL_FILE}")
 
     print("Opening file")
     if not URL_FILE.exists():
@@ -26,12 +45,7 @@ if __name__ == "__main__":
 
             webpage = requests.get(url)
 
-            print("Webpage")
-            # print(webpage.content)
-
             contents = webpage.content.decode()
-            # print(contents)
-            # print("\n\nHere")
             index_front = contents.find('{"rangeLow')
             index_back = contents.find('PriceRange"}') + len('PriceRange"}')
 
@@ -45,9 +59,12 @@ if __name__ == "__main__":
             print(f"\tBaseValue: {car_value_dict['baseValue']}")
             print(f"\tPriceType: {car_value_dict['priceType']}")
 
-            with DATA_FOLDER.joinpath(f"{make}_{model}_{year}_values.csv").open(
-                "a"
-            ) as data_file:
+            data_file_name = f"{make}_{model}_{year}_values.csv"
+
+            if test_mode:
+                data_file_name = f"{make}_{model}_{year}_values_testing.csv"
+
+            with DATA_FOLDER.joinpath(data_file_name).open("a") as data_file:
                 rlow = car_value_dict["rangeLow"]
                 rhigh = car_value_dict["rangeHigh"]
                 value = car_value_dict["configuredValue"]
