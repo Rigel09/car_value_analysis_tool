@@ -16,7 +16,7 @@ DESC = "Scrapes used car pricing data from the web"
 PROG = "Car Value Analysis Tool"
 
 logger = logging.getLogger(__name__)
-
+logger.setLevel(logging.INFO)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog=PROG, description=DESC)
